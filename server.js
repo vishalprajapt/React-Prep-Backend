@@ -1,55 +1,36 @@
 const express = require("express");
-require("dotenv").config();
 const cors = require("cors");
+require("dotenv").config();
+const appMiddleware=require("./middleware/authHadler")
 
-const { MongoClient } = require("mongodb");
+const connectDB = require("./config/db");
+const userRoutes = require("./routes/userRoutes");
+const authRoutes = require("./routes/authRoutes");
+const errorHandler = require("./middleware/errorHandler");
+
+// Connect to MongoDB (Mongoose)
+connectDB();
 
 const app = express();
 
-app.use(express.json());
+// Middlewares
 app.use(cors());
-const client = new MongoClient(process.env.MONGO_URI);
+app.use(express.json());
 
-let db;
-
-async function connectDB() {
-  try {
-    await client.connect();
-
-    db = client.db("reactprep");
-
-    console.log("MongoDB Connected 🚀");
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-connectDB();
-
+// app.use(appMiddleware)
+// Routes
 app.get("/", (req, res) => {
-  res.send("Backend Running");
+  res.send("Backend Running ✅");
 });
 
-app.get("/add-users", async (req, res) => {
-  const users = [
-    { name: "Vishal" },
-    { name: "Rahul" },
-    { name: "Aman" },
-    { name: "Priya" },
-    { name: "Sneha" }
-  ];
+app.use("/api/auth", authRoutes); 
+// app.use("/api/users", userRoutes);
 
-  const result = await db.collection("users").insertMany(users);
 
-  res.send(result);
-});
+// Global Error Handler (must be last)
+// app.use(errorHandler);
 
-app.get("/users", async (req, res) => {
-  const users = await db.collection("users").find().toArray();
-
-  res.send(users);
-});
-
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} 🚀`);
 });
