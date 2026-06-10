@@ -10,10 +10,13 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+// DB Connection
+connectDB();
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(appMiddleware); // App ID + Version check
+app.use(appMiddleware);
 
 // Routes
 app.get("/", (req, res) => {
@@ -23,14 +26,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-// Global Error Handler (must be last)
+// Error Handler
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-
-// Connect DB first, then start server
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT} 🚀`);
-  });
-});
+module.exports = app;
