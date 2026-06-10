@@ -1,5 +1,4 @@
 const Auth = require("../models/Auth");
-
 const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken");
@@ -60,7 +59,7 @@ const register = async (req, res) => {
       password,
       salt
     );
-
+ 
     // create user
     const user = await Auth.create({
       name,
