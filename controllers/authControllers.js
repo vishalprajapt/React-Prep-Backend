@@ -1,9 +1,6 @@
 const Auth = require("../models/Auth");
 const bcrypt = require("bcryptjs");
-
 const jwt = require("jsonwebtoken");
-
-
 
 // GENERATE JWT TOKEN
 const generateToken = (id) => {
@@ -16,22 +13,13 @@ const generateToken = (id) => {
   );
 };
 
-
-
-// REGISTER USER
+// ===================== REGISTER =====================
 const register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      mobile,
-      password,
-    } = req.body;
+    const { name, email, mobile, password } = req.body;
 
-    // check existing email
-    const existingEmail = await Auth.findOne({
-      email,
-    });
+    // Check existing email
+    const existingEmail = await Auth.findOne({ email });
 
     if (existingEmail) {
       return res.status(400).json({
@@ -40,47 +28,49 @@ const register = async (req, res) => {
       });
     }
 
-    // check existing mobile
-    const existingMobile = await Auth.findOne({
-      mobile,
-    });
+    // Check existing mobile only if mobile is provided
+    if (mobile && mobile.trim() !== "") {
+      const existingMobile = await Auth.findOne({ mobile });
 
-    if (existingMobile) {
-      return res.status(400).json({
-        success: false,
-        message: "Mobile already exists",
-      });
+      if (existingMobile) {
+        return res.status(400).json({
+          success: false,
+          message: "Mobile already exists",
+        });
+      }
     }
 
-    // hash password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const hashedPassword = await bcrypt.hash(
-      password,
-      salt
-    );
- 
-    // create user
-    const user = await Auth.create({
+    // Create user data
+    const userData = {
       name,
       email,
-      mobile,
       password: hashedPassword,
-    });
+    };
 
-    // token
+    // Add mobile only if provided
+    if (mobile && mobile.trim() !== "") {
+      userData.mobile = mobile;
+    }
+
+    // Create user
+    const user = await Auth.create(userData);
+
+    // Generate token
     const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
       token,
-
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: user.mobile || null,
       },
     });
   } catch (error) {
@@ -91,17 +81,12 @@ const register = async (req, res) => {
   }
 };
 
-
-
-// LOGIN USER
+// ===================== LOGIN =====================
 const login = async (req, res) => {
   try {
-    const {
-      identifier,
-      password,
-    } = req.body;
+    const { identifier, password } = req.body;
 
-    // find user by email OR mobile
+    // Find by email OR mobile
     const user = await Auth.findOne({
       $or: [
         { email: identifier },
@@ -116,11 +101,8 @@ const login = async (req, res) => {
       });
     }
 
-    // compare password
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -129,19 +111,18 @@ const login = async (req, res) => {
       });
     }
 
-    // token
+    // Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({
       success: true,
       message: "Login successful",
       token,
-
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: user.mobile || null,
       },
     });
   } catch (error) {
@@ -152,14 +133,10 @@ const login = async (req, res) => {
   }
 };
 
-
-
-// GET PROFILE
+// ===================== GET PROFILE =====================
 const getProfile = async (req, res) => {
   try {
-    const user = await Auth.findById(
-      req.user.id
-    ).select("-password");
+    const user = await Auth.findById(req.user.id).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -179,8 +156,6 @@ const getProfile = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   register,
