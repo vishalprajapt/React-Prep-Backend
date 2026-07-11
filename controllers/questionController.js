@@ -5,7 +5,6 @@ const addQuestion = async (req, res) => {
   try {
     const { title, tags, difficulty, status, answer } = req.body;
 
-    // title required hai
     if (!title || title.trim() === "") {
       return res.status(400).json({
         success: false,
@@ -52,4 +51,67 @@ const getQuestions = async (req, res) => {
   }
 };
 
-module.exports = { addQuestion, getQuestions };
+// PUT /api/questions/:id  — question edit karo
+const updateQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, tags, difficulty, status, answer } = req.body;
+
+    const question = await Question.findById(id);
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    // sirf jo fields aaye hain unhe update karo
+    if (title !== undefined) question.title = title;
+    if (tags !== undefined) question.tags = tags;
+    if (difficulty !== undefined) question.difficulty = difficulty;
+    if (status !== undefined) question.status = status;
+    if (answer !== undefined) question.answer = answer;
+
+    const updated = await question.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Question updated successfully",
+      question: updated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// DELETE /api/questions/:id  — question delete karo
+const deleteQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const question = await Question.findByIdAndDelete(id);
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Question deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { addQuestion, getQuestions, updateQuestion, deleteQuestion };
