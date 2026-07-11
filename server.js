@@ -20,7 +20,20 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(appMiddleware); // appid + version check — har route pe lagega
+app.use(appMiddleware);
+
+// DB connection — har request se pehle connect karo (Vercel serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Database connection failed",
+    });
+  }
+});
 
 // Routes
 app.get("/", (req, res) => {
@@ -34,18 +47,12 @@ app.use("/api/questions", questionRoutes);
 // Error Handler
 app.use(errorHandler);
 
-// DB connect + server start
-const startServer = async () => {
-  await connectDB();
-
-  if (process.env.NODE_ENV !== "production") {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  }
-};
-
-startServer();
+// Local development mein server start karo
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
