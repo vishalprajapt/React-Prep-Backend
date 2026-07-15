@@ -36,7 +36,17 @@ const addQuestion = async (req, res) => {
 // GET /api/questions  — sabhi questions fetch karo
 const getQuestions = async (req, res) => {
   try {
-    const questions = await Question.find().sort({ createdAt: -1 });
+    const { Type } = req.body; // <-- req.query ki jagah req.body
+
+    let filter = {};
+
+    if (Number(Type) === 1) {
+      filter.status = "Published";
+    }
+
+    // console.log(filter);
+
+    const questions = await Question.find(filter).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
