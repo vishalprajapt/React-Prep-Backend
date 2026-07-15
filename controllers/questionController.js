@@ -36,7 +36,7 @@ const addQuestion = async (req, res) => {
 // GET /api/questions  — sabhi questions fetch karo
 const getQuestions = async (req, res) => {
   try {
-    const { Type } = req.body; // <-- req.query ki jagah req.body
+    const { Type } = req.query; // <-- req.query ki jagah req.body
 
     let filter = {};
 
