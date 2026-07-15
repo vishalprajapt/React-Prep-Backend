@@ -12,7 +12,7 @@ const {
 router.post("/creat_question", addQuestion);
 
 // GET — sabhi questions fetch karo
-router.get("/get_question", getQuestions);
+router.post("/get_question", getQuestions);
 
 // PUT — question edit karo
 router.put("/update_question/:id", updateQuestion);
